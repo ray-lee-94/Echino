@@ -1,3 +1,4 @@
+import keras
 from keras.layers import GlobalAveragePooling2D, Reshape, Dense, multiply, Permute
 from keras import backend as K
 
@@ -26,3 +27,26 @@ def squeeze_excite_block(input, ratio=16):
 
     x = multiply([init, se])
     return x
+
+
+
+
+class BatchNormalization(keras.layers.BatchNormalization):
+    """
+    Identical to keras.layers.BatchNormalization, but adds the option to freeze parameters.
+    """
+    def __init__(self, freeze, *args, **kwargs):
+        self.freeze = freeze
+        super(BatchNormalization, self).__init__(*args, **kwargs)
+
+        # set to non-trainable if freeze is true
+        self.trainable = not self.freeze
+
+    def call(self, *args, **kwargs):
+        # return super.call, but set training
+        return super(BatchNormalization, self).call(training=(not self.freeze), *args, **kwargs)
+
+    def get_config(self):
+        config = super(BatchNormalization, self).get_config()
+        config.update({'freeze': self.freeze})
+        return config
