@@ -124,7 +124,7 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
             'classification': losses.focal()
         },
         #TODO check optimizers
-        optimizer=keras.optimizers.adam(lr=1e-3, clipnorm=0.001)  #adam
+        optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)  #adam
     )
 
     return model, training_model, prediction_model
@@ -307,7 +307,7 @@ def parse_args(args):
     group.add_argument('--weights',           help='Initialize the model with weights from a file.',default='resnet50_coco.h5')
     group.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.', dest='imagenet_weights', action='store_const', const=False)
 
-    parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='resnet50', type=str)
+    parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='se_resnet50', type=str)
     parser.add_argument('--batch-size',       help='Size of the batches.', default=16, type=int)
     parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default='2,3')
     parser.add_argument('--multi-gpu',        help='Number of GPUs to use for parallel processing.', type=int, default=2)

@@ -45,8 +45,10 @@ class Backbone(object):
 def backbone(backbone_name):
     """ Returns a backbone object for the given backbone.
     """
-    if 'resnet' in backbone_name:
+    if 'resnet' in backbone_name and 'se' not in backbone_name:
         from .resnet import ResNetBackbone as b
+    elif 'se' in backbone_name:
+        from .se_res_retinanet import SE_ResNetBackbone as b
     elif 'mobilenet' in backbone_name:
         from .mobilenet import MobileNetBackbone as b
     elif 'vgg' in backbone_name:
