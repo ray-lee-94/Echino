@@ -304,7 +304,7 @@ def parse_args(args):
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--snapshot',          help='Resume training from a snapshot.')
     group.add_argument('--imagenet-weights',  help='Initialize the model with pretrained imagenet weights. This is the default behaviour.', action='store_const', const=True, default=True)
-    group.add_argument('--weights',           help='Initialize the model with weights from a file.',default='resnet50_coco.h5')
+    group.add_argument('--weights',           help='Initialize the model with weights from a file.',default='./snapshots/se_resnet50_coco_15.h5')
     group.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.', dest='imagenet_weights', action='store_const', const=False)
 
     parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='se_resnet50', type=str)
