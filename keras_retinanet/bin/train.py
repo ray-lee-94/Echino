@@ -99,22 +99,20 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
 
     # load anchor parameters, or pass None (so that defaults will be used)
     anchor_params = None
-    num_anchors = None
+    num_anchors   = None
     if config and 'anchor_parameters' in config:
         anchor_params = parse_anchor_parameters(config)
-        num_anchors = anchor_params.num_anchors()
+        num_anchors   = anchor_params.num_anchors()
 
     # Keras recommends initialising a multi-gpu model on the CPU to ease weight sharing, and to prevent OOM errors.
     # optionally wrap in a parallel model
     if multi_gpu > 1:
         from keras.utils import multi_gpu_model
         with tf.device('/cpu:0'):
-            model = model_with_weights(backbone_retinanet(num_classes, num_anchors=num_anchors, modifier=modifier),
-                                       weights=weights, skip_mismatch=True)
+            model = model_with_weights(backbone_retinanet(num_classes, num_anchors=num_anchors, modifier=modifier), weights=weights, skip_mismatch=True)
         training_model = multi_gpu_model(model, gpus=multi_gpu)
     else:
-        model = model_with_weights(backbone_retinanet(num_classes, num_anchors=num_anchors, modifier=modifier),
-                                   weights=weights, skip_mismatch=True)
+        model          = model_with_weights(backbone_retinanet(num_classes, num_anchors=num_anchors, modifier=modifier), weights=weights, skip_mismatch=True)
         training_model = model
 
     # make prediction model
@@ -123,11 +121,11 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
     # compile model
     training_model.compile(
         loss={
-            'regression': losses.smooth_l1(),
+            'regression'    : losses.smooth_l1(),
             'classification': losses.focal()
         },
-        # TODO check optimizers
-        optimizer=keras.optimizers.adam(lr=1e-3, clipnorm=0.001)  # adam
+        #TODO check optimizers
+        optimizer=keras.optimizers.adam(lr=1e-3, clipnorm=0.001)  #adam
     )
 
     return model, training_model, prediction_model
@@ -152,18 +150,18 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
     # TODO use tensorboard
     if args.tensorboard_dir:
         tensorboard_callback = keras.callbacks.TensorBoard(
-            log_dir=args.tensorboard_dir,
-            histogram_freq=0,
-            batch_size=args.batch_size,
-            write_graph=True,
-            write_grads=False,
-            write_images=False,
-            embeddings_freq=0,
-            embeddings_layer_names=None,
-            embeddings_metadata=None
+            log_dir                = args.tensorboard_dir,
+            histogram_freq         = 0,
+            batch_size             = args.batch_size,
+            write_graph            = True,
+            write_grads            = False,
+            write_images           = False,
+            embeddings_freq        = 0,
+            embeddings_layer_names = None,
+            embeddings_metadata    = None
         )
         callbacks.append(tensorboard_callback)
-    # check evaluations
+    #check evaluations
     if args.evaluation and validation_generator:
         if args.dataset_type == 'coco':
             from ..callbacks.coco import CocoEval
@@ -171,8 +169,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             # use prediction model for evaluation
             evaluation = CocoEval(validation_generator, tensorboard=tensorboard_callback)
         else:
-            evaluation = Evaluate(validation_generator, tensorboard=tensorboard_callback,
-                                  weighted_average=args.weighted_average)
+            evaluation = Evaluate(validation_generator, tensorboard=tensorboard_callback, weighted_average=args.weighted_average)
         evaluation = RedirectModel(evaluation, prediction_model)
         callbacks.append(evaluation)
 
@@ -183,8 +180,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
         checkpoint = keras.callbacks.ModelCheckpoint(
             os.path.join(
                 args.snapshot_path,
-                '{backbone}_{dataset_type}_{{epoch:02d}}.h5'.format(backbone=args.backbone,
-                                                                    dataset_type=args.dataset_type)
+                '{backbone}_{dataset_type}_{{epoch:02d}}.h5'.format(backbone=args.backbone, dataset_type=args.dataset_type)
             ),
             verbose=1,
             # save_best_only=True,
@@ -195,14 +191,14 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
         callbacks.append(checkpoint)
     # TODO check learn schedule
     callbacks.append(keras.callbacks.ReduceLROnPlateau(
-        monitor='loss',
-        factor=0.1,
-        patience=2,
-        verbose=1,
-        mode='auto',
-        epsilon=0.0001,
-        cooldown=0,
-        min_lr=0
+        monitor  = 'loss',
+        factor   = 0.1,
+        patience = 2,
+        verbose  = 1,
+        mode     = 'auto',
+        epsilon  = 0.0001,
+        cooldown = 0,
+        min_lr   = 0
     ))
 
     return callbacks
@@ -216,11 +212,11 @@ def create_generators(args, preprocess_image):
         preprocess_image : Function that preprocesses an image for the network.
     """
     common_args = {
-        'batch_size': args.batch_size,
-        'config': args.config,
-        'image_min_side': args.image_min_side,
-        'image_max_side': args.image_max_side,
-        'preprocess_image': preprocess_image,
+        'batch_size'       : args.batch_size,
+        'config'           : args.config,
+        'image_min_side'   : args.image_min_side,
+        'image_max_side'   : args.image_max_side,
+        'preprocess_image' : preprocess_image,
     }
 
     # create random transform generator for augmenting training data
@@ -287,12 +283,10 @@ def check_args(parsed_args):
                                                                                                 parsed_args.snapshot))
 
     if parsed_args.multi_gpu > 1 and not parsed_args.multi_gpu_force:
-        raise ValueError(
-            "Multi-GPU support is experimental, use at own risk! Run with --multi-gpu-force if you wish to continue.")
+        raise ValueError("Multi-GPU support is experimental, use at own risk! Run with --multi-gpu-force if you wish to continue.")
 
     if 'resnet' not in parsed_args.backbone:
-        warnings.warn(
-            'Using experimental backbone {}. Only resnet50 has been properly tested.'.format(parsed_args.backbone))
+        warnings.warn('Using experimental backbone {}. Only resnet50 has been properly tested.'.format(parsed_args.backbone))
 
     return parsed_args
 
@@ -300,21 +294,19 @@ def check_args(parsed_args):
 def parse_args(args):
     """ Parse the arguments.
     """
-    parser = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
+    parser     = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
     subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type')
     subparsers.required = True
 
     coco_parser = subparsers.add_parser('coco')
     coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
 
+
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('--snapshot', help='Resume training from a snapshot.')
-    group.add_argument('--imagenet-weights',
-                       help='Initialize the model with pretrained imagenet weights. This is the default behaviour.',
-                       action='store_const', const=True, default=True)
-    group.add_argument('--weights', help='Initialize the model with weights from a file.', default='resnet50_coco.h5')
-    group.add_argument('--no-weights', help='Don\'t initialize the model with any weights.', dest='imagenet_weights',
-                       action='store_const', const=False)
+    group.add_argument('--snapshot',          help='Resume training from a snapshot.')
+    group.add_argument('--imagenet-weights',  help='Initialize the model with pretrained imagenet weights. This is the default behaviour.', action='store_const', const=True, default=True)
+    group.add_argument('--weights',           help='Initialize the model with weights from a file.',default='resnet50_coco.h5')
+    group.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.', dest='imagenet_weights', action='store_const', const=False)
 
     parser.add_argument('--backbone', help='Backbone model used by retinanet.', default='resnet50', type=str)
     parser.add_argument('--batch-size', help='Size of the batches.', default=16, type=int)
@@ -372,9 +364,9 @@ def main(args=None):
     # create the model
     if args.snapshot is not None:
         print('Loading model, this may take a second...')
-        model = models.load_model(args.snapshot, backbone_name=args.backbone)
-        training_model = model
-        anchor_params = None
+        model            = models.load_model(args.snapshot, backbone_name=args.backbone)
+        training_model   = model
+        anchor_params    = None
         if args.config and 'anchor_parameters' in args.config:
             anchor_params = parse_anchor_parameters(args.config)
         prediction_model = retinanet_bbox(model=model, anchor_params=anchor_params)

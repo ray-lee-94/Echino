@@ -74,11 +74,11 @@ def parse_args(args):
     coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
 
     parser.add_argument('model',              help='Path to RetinaNet model.')
-    parser.add_argument('--convert-model',    help='Convert the model to an inference model (ie. the input is a training model).', action='store_true',default=True)
+    parser.add_argument('--convert-model',    help='Convert the model to an inference model (ie. the input is a training model).', action='store_true')
     parser.add_argument('--backbone',         help='The backbone of the model.', default='resnet50')
     parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default='1')
     parser.add_argument('--score-threshold',  help='Threshold on score to filter detections with (defaults to 0.05).', default=0.4, type=float)
-    parser.add_argument('--iou-threshold',    help='IoU Threshold to count for a positive detection (defaults to 0.5).', default=0.4, type=float)
+    parser.add_argument('--iou-threshold',    help='IoU Threshold to count for a positive detection (defaults to 0.5).', default=0.2, type=float)
     parser.add_argument('--max-detections',   help='Max Detections per image (defaults to 100).', default=4, type=int)
     parser.add_argument('--save-path',        help='Path for saving images with detections (doesn\'t work for COCO).')
     parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=400)
