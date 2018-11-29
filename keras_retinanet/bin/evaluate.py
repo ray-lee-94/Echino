@@ -85,9 +85,9 @@ def parse_args(args):
     parser.add_argument('--convert-model',    help='Convert the model to an inference model (ie. the input is a training model).', action='store_true',default=True)
     parser.add_argument('--backbone',         help='The backbone of the model.', default='resnet50')
     parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default='2')
-    parser.add_argument('--score-threshold',  help='Threshold on score to filter detections with (defaults to 0.05).', default=0.05, type=float)
+    parser.add_argument('--score-threshold',  help='Threshold on score to filter detections with (defaults to 0.05).', default=0.3, type=float)
     parser.add_argument('--iou-threshold',    help='IoU Threshold to count for a positive detection (defaults to 0.5).', default=0.5, type=float)
-    parser.add_argument('--max-detections',   help='Max Detections per image (defaults to 100).', default=5, type=int)
+    parser.add_argument('--max-detections',   help='Max Detections per image (defaults to 100).', default=4, type=int)
     parser.add_argument('--save-path',        help='Path for saving images with detections (doesn\'t work for COCO).')
     parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=400)
     parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=600)
@@ -131,7 +131,7 @@ def main(args=None):
     print('Loading model, this may take a second...')
     model = models.load_model(args.model, backbone_name=args.backbone, convert=args.convert_model, anchor_params=anchor_params)
 
-    all_detections     = _get_detections(generator, model, score_threshold=args.iou_threshold, max_detections=args.max_detections, save_path=args.save_path)
+    all_detections     = _get_detections(generator, model, score_threshold=args.score_threshold, max_detections=args.max_detections, save_path=args.save_path)
 
     with open('output.txt','w') as L:
         for index,detection in enumerate(all_detections):
