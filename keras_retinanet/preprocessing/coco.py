@@ -111,7 +111,7 @@ class CocoGenerator(Generator):
         """ Load an image at the image_index.
         """
         image_info = self.coco.loadImgs(self.image_ids[image_index])[0]
-        path       = os.path.join(self.data_dir,"instances_"+ self.set_name, image_info['file_name'])
+        path       = os.path.join(self.data_dir, 'instances_'+ self.set_name, image_info['file_name'])
         return read_image_bgr(path)
 
     def load_annotations(self, image_index):
