@@ -300,7 +300,7 @@ def parse_args(args):
     # coco_parser = subparsers.add_parser('coco')
     # coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
     parser.add_argument("--dataset_type",default="coco")
-    parser.add_argument("--coco_path",default="/data/wen/Dataset/data_maker/COCO_maker/coco")
+    parser.add_argument("--coco_path",default="/data/wen/Dataset/coco")
     # group = parser.add_mutually_exclusive_group()
     parser.add_argument('--snapshot',          help='Resume training from a snapshot.')
     parser.add_argument('--imagenet-weights',  help='Initialize the model with pretrained imagenet weights.'
@@ -313,7 +313,7 @@ def parse_args(args):
 
     parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='resnet50', type=str)
     parser.add_argument('--batch-size',       help='Size of the batches.', default=16, type=int)
-    parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default="4,5")
+    parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default="0,1")
     parser.add_argument('--multi-gpu',        help='Number of GPUs to use for parallel processing.', type=int, default=2)
     parser.add_argument('--multi-gpu-force',  help='Extra flag needed to enable (experimental) multi-gpu support.', action='store_true',default=True)
     parser.add_argument('--epochs',           help='Number of epochs to train.', type=int, default=100)

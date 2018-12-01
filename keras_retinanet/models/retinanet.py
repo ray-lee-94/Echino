@@ -73,7 +73,7 @@ def default_classification_model(
     if keras.backend.image_data_format() == 'channels_first':
         outputs = keras.layers.Permute((2, 3, 1), name='pyramid_classification_permute')(outputs)
     outputs = keras.layers.Reshape((-1, num_classes), name='pyramid_classification_reshape')(outputs)
-    outputs = keras.layers.Activation('sigmoid', name='pyramid_classification_sigmoid')(outputs)
+    # outputs = keras.layers.Activation('sigmoid', name='pyramid_classification_sigmoid')(outputs)
 
     return keras.models.Model(inputs=inputs, outputs=outputs, name=name)
 
