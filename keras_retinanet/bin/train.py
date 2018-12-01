@@ -126,7 +126,6 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
     #TODO: chek alpha
             # 'feature': losses.get_center_loss(alpha=0.03,num_classes=9)
         },
-        optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)
         #TODO check optimizers
         optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)  #adam
     )
