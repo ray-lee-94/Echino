@@ -67,16 +67,17 @@ def parse_args(args):
     """ Parse the arguments.
     """
     parser     = argparse.ArgumentParser(description='Evaluation script for a RetinaNet network.')
-    subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type')
-    subparsers.required = True
+    # subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type')
+    # subparsers.required = True
 
-    coco_parser = subparsers.add_parser('coco')
-    coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
-
-    parser.add_argument('model',              help='Path to RetinaNet model.')
-    parser.add_argument('--convert-model',    help='Convert the model to an inference model (ie. the input is a training model).', action='store_true')
+    # coco_parser = subparsers.add_parser('coco')
+    # coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
+    parser.add_argument("--dataset_type",default='coco')
+    parser.add_argument("--coco_path",help='dataset',default="/data/wen/Dataset/coco")
+    parser.add_argument('--model',              help='Path to RetinaNet model.',default="snapshots_master/resnet50_coco_20.h5")
+    parser.add_argument('--convert-model',    help='Convert the model to an inference model (ie. the input is a training model).', action='store_true',default=True)
     parser.add_argument('--backbone',         help='The backbone of the model.', default='resnet50')
-    parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default='1')
+    parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default='2')
     parser.add_argument('--score-threshold',  help='Threshold on score to filter detections with (defaults to 0.05).', default=0.4, type=float)
     parser.add_argument('--iou-threshold',    help='IoU Threshold to count for a positive detection (defaults to 0.5).', default=0.2, type=float)
     parser.add_argument('--max-detections',   help='Max Detections per image (defaults to 100).', default=4, type=int)
@@ -121,7 +122,7 @@ def main(args=None):
 
     # load the model
     print('Loading model, this may take a second...')
-    model = models.load_model(args.model, backbone_name=args.backbone, convert=args.convert_model, anchor_params=anchor_params)
+    model = models.load_model(args.model, backbone_name=args.backbone, convert=args.convert_model,class_specific_filter=True, anchor_params=anchor_params)
 
     # print model summary
     # print(model.summary())
