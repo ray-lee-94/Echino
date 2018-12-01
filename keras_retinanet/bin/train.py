@@ -127,6 +127,8 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
             # 'feature': losses.get_center_loss(alpha=0.03,num_classes=9)
         },
         optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)
+        #TODO check optimizers
+        optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)  #adam
     )
 
     return model, training_model, prediction_model
@@ -148,7 +150,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
     callbacks = []
 
     tensorboard_callback = None
-
+    # TODO use tensorboard
     if args.tensorboard_dir:
         tensorboard_callback = keras.callbacks.TensorBoard(
             log_dir                = args.tensorboard_dir,
@@ -162,7 +164,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             embeddings_metadata    = None
         )
         callbacks.append(tensorboard_callback)
-
+    #check evaluations
     if args.evaluation and validation_generator:
         if args.dataset_type == 'coco':
             from ..callbacks.coco import CocoEval
@@ -190,7 +192,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
         )
         checkpoint = RedirectModel(checkpoint, model)
         callbacks.append(checkpoint)
-
+    # TODO check learn schedule
     callbacks.append(keras.callbacks.ReduceLROnPlateau(
         monitor  = 'loss',
         factor   = 0.1,
@@ -221,6 +223,7 @@ def create_generators(args, preprocess_image):
     }
 
     # create random transform generator for augmenting training data
+    # TODO check arugment
     if args.random_transform:
         transform_generator = random_transform_generator(
             min_rotation=-0.1,
@@ -322,11 +325,11 @@ def parse_args(args):
                         default='./snapshots_master')
     parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs')
     parser.add_argument('--no-snapshots',     help='Disable saving snapshots.', dest='snapshots', action='store_false')
-    parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false',default=False)
-    parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true',default=False)
-    parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true',default=False)
-    parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=400)
-    parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=600)
+    parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
+    parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true')
+    parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
+    parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=512)
+    parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=512)
     parser.add_argument('--config',           help='Path to a configuration parameters .ini file.')
     parser.add_argument('--weighted-average', help='Compute the mAP using the weighted average of precisions among classes.',
                         action='store_true')

@@ -30,10 +30,10 @@ if __name__ == "__main__" and __package__ is None:
 # Change these to absolute imports if you copy this script outside the keras_retinanet package.
 from .. import models
 from ..utils.config import read_config_file, parse_anchor_parameters
-from ..utils.eval import evaluate
+from ..utils.eval import evaluate,_get_detections
 from ..utils.keras_version import check_keras_version
-
-
+import numpy as np
+import json
 def get_session():
     """ Construct a modified tf session.
     """
@@ -81,6 +81,10 @@ def parse_args(args):
     parser.add_argument('--score-threshold',  help='Threshold on score to filter detections with (defaults to 0.05).', default=0.4, type=float)
     parser.add_argument('--iou-threshold',    help='IoU Threshold to count for a positive detection (defaults to 0.5).', default=0.2, type=float)
     parser.add_argument('--max-detections',   help='Max Detections per image (defaults to 100).', default=4, type=int)
+    parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default='2')
+    parser.add_argument('--score-threshold',  help='Threshold on score to filter detections with (defaults to 0.05).', default=0.3, type=float)
+    parser.add_argument('--iou-threshold',    help='IoU Threshold to count for a positive detection (defaults to 0.5).', default=0.5, type=float)
+    parser.add_argument('--max-detections',   help='Max Detections per image (defaults to 100).', default=4, type=int)
     parser.add_argument('--save-path',        help='Path for saving images with detections (doesn\'t work for COCO).')
     parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=400)
     parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=600)
@@ -124,40 +128,21 @@ def main(args=None):
     print('Loading model, this may take a second...')
     model = models.load_model(args.model, backbone_name=args.backbone, convert=args.convert_model,class_specific_filter=True, anchor_params=anchor_params)
 
-    # print model summary
-    # print(model.summary())
+    all_detections     = _get_detections(generator, model, score_threshold=args.score_threshold, max_detections=args.max_detections, save_path=args.save_path)
 
-    # start evaluation
-    if args.dataset_type == 'coco':
-        from ..utils.coco_eval import evaluate_coco
-        evaluate_coco(generator, model, args.score_threshold)
-    else:
-        average_precisions = evaluate(
-            generator,
-            model,
-            iou_threshold=args.iou_threshold,
-            score_threshold=args.score_threshold,
-            max_detections=args.max_detections,
-            save_path=args.save_path
-        )
-
-        # print evaluation
-        total_instances = []
-        precisions = []
-        for label, (average_precision, num_annotations) in average_precisions.items():
-            print('{:.0f} instances of class'.format(num_annotations),
-                  generator.label_to_name(label), 'with average precision: {:.4f}'.format(average_precision))
-            total_instances.append(num_annotations)
-            precisions.append(average_precision)
-
-        if sum(total_instances) == 0:
-            print('No test instances found.')
-            return
-
-        if args.weighted_average:
-            print('mAP: {:.4f}'.format(sum([a * b for a, b in zip(total_instances, precisions)]) / sum(total_instances)))
-        else:
-            print('mAP: {:.4f}'.format(sum(precisions) / sum(x > 0 for x in total_instances)))
+    with open('output.txt','w') as L:
+        for index,detection in enumerate(all_detections):
+            for tp,box in enumerate(detection):
+                if box.any():
+                    boxx=list(map(int,box[0,:4]))
+                    score=str(float(box[0,4]))
+                    boxx=list(map(str,boxx[:4]))
+                    image=generator.coco.loadImgs(generator.image_ids[index])[0]
+                    image_name=image["file_name"]
+                    tp_name=generator.coco_label_to_name(tp+1)
+                    L.writelines([image_name," ",tp_name," ",boxx[0]," ",boxx[1]," ",
+                                  boxx[2]," ",boxx[3]," ",
+                                  score,"\n"])
 
 
 if __name__ == '__main__':
