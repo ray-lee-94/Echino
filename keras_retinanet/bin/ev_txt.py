@@ -512,5 +512,5 @@ def evaluate(test_folder, test_image, txt_folder):
     drawIOU()
     confusion_matrix()
     els()
-evaluate('rtn_center_23',test_image='/data/wen/Dataset/data_maker/COCO_maker/new_data/test',
+evaluate('center_100',test_image='/data/wen/Dataset/data_maker/COCO_maker/new_data/test',
          txt_folder='/data/wen/Dataset/data_maker/COCO_maker/new_data/')
