@@ -27,9 +27,10 @@ import tensorflow as tf
 
 # Allow relative imports when being executed as script.
 if __name__ == "__main__" and __package__ is None:
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-    import keras_retinanet.bin  # noqa: F401
-    __package__ = "keras_retinanet.bin"
+	sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+	import keras_retinanet.bin  # noqa: F401
+
+	__package__ = "keras_retinanet.bin"
 
 # Change these to absolute imports if you copy this script outside the keras_retinanet package.
 from .. import layers  # noqa: F401
@@ -126,7 +127,8 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
     #TODO: chek alpha
             # 'feature': losses.get_center_loss(alpha=0.03,num_classes=9)
         },
-        optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)
+        #TODO check optimizers
+        optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)  #adam
     )
 
     return model, training_model, prediction_model
@@ -148,7 +150,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
     callbacks = []
 
     tensorboard_callback = None
-
+    # TODO use tensorboard
     if args.tensorboard_dir:
         tensorboard_callback = keras.callbacks.TensorBoard(
             log_dir                = args.tensorboard_dir,
@@ -162,7 +164,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             embeddings_metadata    = None
         )
         callbacks.append(tensorboard_callback)
-
+    #check evaluations
     if args.evaluation and validation_generator:
         if args.dataset_type == 'coco':
             from ..callbacks.coco import CocoEval
@@ -190,7 +192,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
         )
         checkpoint = RedirectModel(checkpoint, model)
         callbacks.append(checkpoint)
-
+    # TODO check learn schedule
     callbacks.append(keras.callbacks.ReduceLROnPlateau(
         monitor  = 'loss',
         factor   = 0.1,
@@ -221,6 +223,7 @@ def create_generators(args, preprocess_image):
     }
 
     # create random transform generator for augmenting training data
+    # TODO check arugment
     if args.random_transform:
         transform_generator = random_transform_generator(
             min_rotation=-0.1,
@@ -307,7 +310,7 @@ def parse_args(args):
                                                    ' This is the default behaviour.', action='store_const',
                        const=False, default=False)
     parser.add_argument('--weights',           help='Initialize the model with weights from a file.',default=
-                       'resnet50_coco.h5')
+                       './snapshots_fine_tuning/resnet50_coco_30.h5')
     parser.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.',
                        dest='imagenet_weights', action='store_const', const=False)
 
@@ -319,10 +322,10 @@ def parse_args(args):
     parser.add_argument('--epochs',           help='Number of epochs to train.', type=int, default=100)
     parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=2937)
     parser.add_argument('--snapshot-path',    help='Path to store snapshots of models during training (defaults to \'./snapshots\')',
-                        default='./snapshots_master')
-    parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs')
+                        default='./snapshots_fine_tuning')
+    parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs_fine_tuning')
     parser.add_argument('--no-snapshots',     help='Disable saving snapshots.', dest='snapshots', action='store_false')
-    parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false',default=False)
+    parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false',default=True)
     parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true',default=False)
     parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true',default=False)
     parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=400)
