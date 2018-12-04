@@ -118,13 +118,16 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
     prediction_model = retinanet_bbox(model=model, anchor_params=anchor_params)
 
     # compile model
+    #TODO : add centerloss
     training_model.compile(
         loss={
             'regression'    : losses.smooth_l1(),
-            'classification': losses.focal()
+            'classification': losses.focal(),
+    #TODO: chek alpha
+            # 'feature': losses.get_center_loss(alpha=0.03,num_classes=9)
         },
         #TODO check optimizers
-        optimizer=keras.optimizers.adam(lr=1e-3, clipnorm=0.001)  #adam
+        optimizer=keras.optimizers.adam(lr=1e-6, clipnorm=0.001)  #adam
     )
 
     return model, training_model, prediction_model
@@ -252,7 +255,6 @@ def create_generators(args, preprocess_image):
             'val2017',
             **common_args
         )
-
     else:
         raise ValueError('Invalid data type received: {}'.format(args.dataset_type))
 
@@ -294,36 +296,42 @@ def parse_args(args):
     """ Parse the arguments.
     """
     parser     = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
-    subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type')
-    subparsers.required = True
+    # subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type')
+    # subparsers.required = True
 
-    coco_parser = subparsers.add_parser('coco')
-    coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
-
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--snapshot',          help='Resume training from a snapshot.')
-    group.add_argument('--imagenet-weights',  help='Initialize the model with pretrained imagenet weights. This is the default behaviour.', action='store_const', const=True, default=True)
-    group.add_argument('--weights',           help='Initialize the model with weights from a file.',default='resnet50_coco.h5')
-    group.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.', dest='imagenet_weights', action='store_const', const=False)
+    # coco_parser = subparsers.add_parser('coco')
+    # coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
+    parser.add_argument("--dataset_type",default="coco")
+    parser.add_argument("--coco_path",default="/data/wen/Dataset/data_maker/COCO_maker/coco")
+    # group = parser.add_mutually_exclusive_group()
+    parser.add_argument('--snapshot',          help='Resume training from a snapshot.')
+    parser.add_argument('--imagenet-weights',  help='Initialize the model with pretrained imagenet weights.'
+                                                   ' This is the default behaviour.', action='store_const',
+                       const=False, default=False)
+    parser.add_argument('--weights',           help='Initialize the model with weights from a file.',default=
+                       './snapshots_fine_tuning/resnet50_coco_30.h5')
+    parser.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.',
+                       dest='imagenet_weights', action='store_const', const=False)
 
     parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='resnet50', type=str)
     parser.add_argument('--batch-size',       help='Size of the batches.', default=16, type=int)
-    parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default='2,3')
+    parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default="4,5")
     parser.add_argument('--multi-gpu',        help='Number of GPUs to use for parallel processing.', type=int, default=2)
     parser.add_argument('--multi-gpu-force',  help='Extra flag needed to enable (experimental) multi-gpu support.', action='store_true',default=True)
-    parser.add_argument('--epochs',           help='Number of epochs to train.', type=int, default=50)
-    parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=3000)
-    parser.add_argument('--snapshot-path',    help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
-    parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs')
+    parser.add_argument('--epochs',           help='Number of epochs to train.', type=int, default=100)
+    parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=2937)
+    parser.add_argument('--snapshot-path',    help='Path to store snapshots of models during training (defaults to \'./snapshots\')',
+                        default='./snapshots_fine_tuning')
+    parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs_fine_tuning')
     parser.add_argument('--no-snapshots',     help='Disable saving snapshots.', dest='snapshots', action='store_false')
-    parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
-    parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true')
-    parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
-    parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=512)
-    parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=512)
+    parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false',default=True)
+    parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true',default=False)
+    parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true',default=False)
+    parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=400)
+    parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=600)
     parser.add_argument('--config',           help='Path to a configuration parameters .ini file.')
-    parser.add_argument('--weighted-average', help='Compute the mAP using the weighted average of precisions among classes.', action='store_true')
+    parser.add_argument('--weighted-average', help='Compute the mAP using the weighted average of precisions among classes.',
+                        action='store_true')
 
     return check_args(parser.parse_args(args))
 
