@@ -24,12 +24,12 @@ from . import Backbone
 from ..utils.image import preprocess_image
 
 
-class ResNetBackbone(Backbone):
+class SE_ResNetBackbone(Backbone):
     """ Describes backbone information and provides utility functions.
     """
 
     def __init__(self, backbone):
-        super(ResNetBackbone, self).__init__(backbone)
+        super( SE_ResNetBackbone, self).__init__(backbone)
         self.custom_objects.update(se_resnet.custom_objects)
 
     def retinanet(self, *args, **kwargs):
@@ -64,8 +64,8 @@ class ResNetBackbone(Backbone):
         """ Checks whether the backbone string is correct.
         """
         allowed_backbones = ['se_resnet50', 'se_resnet101', 'se_resnet152']
-        backbone = self.backbone.split('_')[0]
-
+        # backbone = self.backbone.split('_')[0]
+        backbone=self.backbone
         if backbone not in allowed_backbones:
             raise ValueError('Backbone (\'{}\') not in allowed backbones ({}).'.format(backbone, allowed_backbones))
 
@@ -96,11 +96,11 @@ def se_resnet_retinanet(num_classes, backbone='se_resnet50', inputs=None, modifi
 
     # create the resnet backbone
     if backbone == 'se_resnet50':
-        resnet = se_resnet.SEResNet50(inputs, include_top=False, freeze_bn=True)
+        resnet = se_resnet.SEResNet50(input_tensor= inputs, include_top=False, freeze_bn=True)
     elif backbone == 'se_resnet101':
-        resnet = se_resnet.SEResNet101(inputs, include_top=False, freeze_bn=True)
+        resnet = se_resnet.SEResNet101(input_tensor= inputs, include_top=False, freeze_bn=True)
     elif backbone == 'se_resnet152':
-        resnet = se_resnet.SEResNet154(inputs, include_top=False, freeze_bn=True)
+        resnet = se_resnet.SEResNet154(input_tensor= inputs, include_top=False, freeze_bn=True)
     else:
         raise ValueError('Backbone (\'{}\') is invalid.'.format(backbone))
 
@@ -112,13 +112,13 @@ def se_resnet_retinanet(num_classes, backbone='se_resnet50', inputs=None, modifi
     return retinanet.retinanet(inputs=inputs, num_classes=num_classes, backbone_layers=resnet.outputs[1:], **kwargs)
 
 
-def resnet50_retinanet(num_classes, inputs=None, **kwargs):
+def se_resnet50_retinanet(num_classes, inputs=None, **kwargs):
     return se_resnet_retinanet(num_classes=num_classes, backbone='se_resnet50', inputs=inputs, **kwargs)
 
 
-def resnet101_retinanet(num_classes, inputs=None, **kwargs):
+def se_resnet101_retinanet(num_classes, inputs=None, **kwargs):
     return se_resnet_retinanet(num_classes=num_classes, backbone='se_resnet101', inputs=inputs, **kwargs)
 
 
-def resnet152_retinanet(num_classes, inputs=None, **kwargs):
+def se_resnet152_retinanet(num_classes, inputs=None, **kwargs):
     return se_resnet_retinanet(num_classes=num_classes, backbone='se_resnet152', inputs=inputs, **kwargs)

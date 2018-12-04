@@ -25,7 +25,7 @@ from keras.regularizers import l2
 from keras.utils import conv_utils
 from keras.utils.data_utils import get_file
 from keras.engine.topology import get_source_inputs
-from keras.applications.imagenet_utils import _obtain_input_shape
+# from keras.applications.imagenet_utils import _obtain_input_shape
 from keras.applications.resnet50 import preprocess_input
 from keras.applications.imagenet_utils import decode_predictions
 from keras import backend as K
@@ -40,7 +40,7 @@ WEIGHTS_PATH_NO_TOP = ""
 
 
 custom_objects = {
-    'BatchNormalization':BatchNormalization,
+    'BatchNormalization': BatchNormalization,
 }
 
 
@@ -119,14 +119,18 @@ def SEResNet(input_shape=None,
                                        "of the depth list."
 
     # Determine proper input shape
-    input_shape = _obtain_input_shape(input_shape,
-                                      default_size=224,
-                                      min_size=32,
-                                      data_format=K.image_data_format(),
-                                      require_flatten=False)
+    # input_shape = _obtain_input_shape(input_shape,
+    #                                   default_size=224,
+    #                                   min_size=32,
+    #                                   data_format=K.image_data_format(),
+    #                                   require_flatten=False)
 
     if input_tensor is None:
-        img_input = Input(shape=input_shape)
+        if K.image_data_format() == 'channels_first':
+            img_input =Input(shape=(3, None, None))
+        else:
+            img_input =Input(shape=(None, None, 3))
+        # img_input = Input(shape=input_shape)
     else:
         if not K.is_keras_tensor(input_tensor):
             img_input = Input(tensor=input_tensor, shape=input_shape)
@@ -362,20 +366,20 @@ def _create_se_resnet(classes, img_input, include_top, initial_conv_filters, fil
     '''
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     N = list(depth)
-
+    outputs=[]
     # block 1 (initial conv block)
     x = Conv2D(initial_conv_filters, (7, 7), padding='same', use_bias=False, strides=(2, 2),
                kernel_initializer='he_normal', kernel_regularizer=l2(weight_decay))(img_input)
 
     x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
-
+    # outputs.append(x)
     # block 2 (projection block)
     for i in range(N[0]):
         if bottleneck:
             x = _resnet_bottleneck_block(x, filters[0], width)
         else:
             x = _resnet_block(x, filters[0], width)
-
+    outputs.append(x)
     # block 3 - N
     for k in range(1, len(N)):
         if bottleneck:
@@ -388,6 +392,7 @@ def _create_se_resnet(classes, img_input, include_top, initial_conv_filters, fil
                 x = _resnet_bottleneck_block(x, filters[k], width)
             else:
                 x = _resnet_block(x, filters[k], width)
+        outputs.append(x)
 
     x = BatchNormalization(axis=channel_axis,freeze=freeze_bn)(x)
     x = Activation('relu')(x)
@@ -397,9 +402,10 @@ def _create_se_resnet(classes, img_input, include_top, initial_conv_filters, fil
         x = Dense(classes, use_bias=False, kernel_regularizer=l2(weight_decay),
                   activation='softmax')(x)
     else:
-        if pooling == 'avg':
-            x = GlobalAveragePooling2D()(x)
-        elif pooling == 'max':
-            x = GlobalMaxPooling2D()(x)
+        # if pooling == 'avg':
+        #     x = GlobalAveragePooling2D()(x)
+        # elif pooling == 'max':
+        #     x = GlobalMaxPooling2D()(x)
+        x=outputs
 
     return x

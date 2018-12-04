@@ -118,16 +118,13 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
     prediction_model = retinanet_bbox(model=model, anchor_params=anchor_params)
 
     # compile model
-    #TODO : add centerloss
     training_model.compile(
         loss={
             'regression'    : losses.smooth_l1(),
-            'classification': losses.focal(),
-    #TODO: chek alpha
-            # 'feature': losses.get_center_loss(alpha=0.03,num_classes=9)
+            'classification': losses.focal()
         },
         #TODO check optimizers
-        optimizer=keras.optimizers.adam(lr=1e-6, clipnorm=0.001)  #adam
+        optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)  #adam
     )
 
     return model, training_model, prediction_model
@@ -255,6 +252,7 @@ def create_generators(args, preprocess_image):
             'val2017',
             **common_args
         )
+
     else:
         raise ValueError('Invalid data type received: {}'.format(args.dataset_type))
 
@@ -313,16 +311,15 @@ def parse_args(args):
     parser.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.',
                        dest='imagenet_weights', action='store_const', const=False)
 
-    parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='resnet50', type=str)
-    parser.add_argument('--batch-size',       help='Size of the batches.', default=16, type=int)
-    parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default="4,5")
+    parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='se_resnet50', type=str)
+    parser.add_argument('--batch-size',       help='Size of the batches.', default=10, type=int)
+    parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).',default='2,3')
     parser.add_argument('--multi-gpu',        help='Number of GPUs to use for parallel processing.', type=int, default=2)
     parser.add_argument('--multi-gpu-force',  help='Extra flag needed to enable (experimental) multi-gpu support.', action='store_true',default=True)
     parser.add_argument('--epochs',           help='Number of epochs to train.', type=int, default=100)
-    parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=2937)
-    parser.add_argument('--snapshot-path',    help='Path to store snapshots of models during training (defaults to \'./snapshots\')',
-                        default='./snapshots_fine_tuning')
-    parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs_fine_tuning')
+    parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=3000)
+    parser.add_argument('--snapshot-path',    help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
+    parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs')
     parser.add_argument('--no-snapshots',     help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false',default=True)
     parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true',default=False)
